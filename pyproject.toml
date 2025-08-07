@@ -1,0 +1,25 @@
+[project]
+name = "ftp-magento"
+version = "0.1.0"
+description = "Add your description here"
+authors = [{ name = "José Roberto Ferreira" }]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "paramiko>=4.0.0",
+    "pyodbc>=5.2.0",
+    "python-decouple>=3.8",
+    "schedule>=1.2.2",
+]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ['migrations']
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT']
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'

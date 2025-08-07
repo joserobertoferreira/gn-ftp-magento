@@ -1,0 +1,1 @@
+# GN-FTP-Magento

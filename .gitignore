@@ -192,5 +192,6 @@ pyrightconfig.json
 __localcode
 static/
 media/
+known_hosts
 
 # End of https://www.toptal.com/developers/gitignore/api/python

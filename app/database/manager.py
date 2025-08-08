@@ -16,7 +16,7 @@ class DatabaseManager:
 
     def __init__(self):
         """
-        Inicializa o gerenciador, construindo a string de conexão.
+        Inicializa o gerenciador, construir a string de conexão.
         """
         self.connection_string = (
             # f'DRIVER={{{settings.DB_DRIVER}}};'
@@ -24,7 +24,7 @@ class DatabaseManager:
             f'DATABASE={settings.DATABASE.get("DATABASE")};'
             f'UID={settings.DATABASE.get("USERNAME")};'
             f'PWD={settings.DATABASE.get("PASSWORD")};'
-            f'TrustServerCertificate=yes;'  # Adicionado para evitar problemas com certificados SSL
+            f'TrustServerCertificate={settings.DATABASE.get("TRUSTED_CONNECTION")};'
         )
         self.schema = settings.DATABASE.get('SCHEMA', 'dbo')
         self.connection = None
@@ -35,7 +35,7 @@ class DatabaseManager:
         Abre a conexão com o banco de dados.
         """
         try:
-            logging.info('Abrindo conexão com o banco de dados...')
+            logging.info('Abrir conexão com o banco de dados...')
             self.connection = pyodbc.connect(self.connection_string)
             logging.info('Conexão com o banco de dados estabelecida com sucesso.')
             return self
@@ -89,7 +89,7 @@ class DatabaseManager:
         if not group_by_fields:
             return ''
 
-        # Escapando todos os nomes antes de juntar
+        # Escapar todos os nomes antes de juntar
         escaped_fields = [self._escape_name(f) for f in group_by_fields]
         return ' GROUP BY ' + ', '.join(escaped_fields)
 
@@ -157,7 +157,7 @@ class DatabaseManager:
         query += self._build_order_by_clause(order_by_fields)
 
         try:
-            logging.info(f'Executando a query: {query}')
+            logging.info(f'Executar a query: {query}')
             logging.info(f'Com os parâmetros: {params}')
 
             cursor.execute(query, tuple(params))

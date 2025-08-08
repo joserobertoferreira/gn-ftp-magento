@@ -7,18 +7,15 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Database connection parameters
-DATABASE = {
-    'SERVER': config('DB_SERVER', default='localhost', cast=str),
-    'DATABASE': config('DB_DATABASE', default='', cast=str),
-    'SCHEMA': config('DB_SCHEMA', default='', cast=str),
-    'USERNAME': config('DB_USERNAME', default='', cast=str),
-    'PASSWORD': config('DB_PASSWORD', default='', cast=str),
-    'DRIVER': config('DB_DRIVER', default='', cast=str),
-    'TRUSTED_CONNECTION': config('DB_TRUSTED_CONNECTION', default='yes', cast=str),
-}
+SERVER = str(config('DB_SERVER', default='localhost', cast=str))
+DATABASE = str(config('DB_DATABASE', default='', cast=str))
+SCHEMA = str(config('DB_SCHEMA', default='', cast=str))
+USERNAME = str(config('DB_USERNAME', default='', cast=str))
+PASSWORD = str(config('DB_PASSWORD', default='', cast=str))
+PORT = int(config('DB_PORT', default=1433, cast=int))
 
 # Debug mode
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = bool(config('DEBUG', default=False, cast=bool))
 
 # Logging configuration
 LOG_DIR = 'logs'
@@ -42,9 +39,11 @@ SFTP_DOWNLOAD_PATH = config('SFTP_DOWNLOAD_PATH', default='/', cast=str)
 SFTP_SYNC_BASE_PATH = str(config('SFTP_SYNC_BASE_PATH', default='/', cast=str))
 
 _template = str(config('LOCAL_EXPORT_PATH', cast=str))
-LOCAL_EXPORT_PATH = _template.format(schema=DATABASE['SCHEMA'])
+LOCAL_EXPORT_PATH = _template.format(schema=SCHEMA)
+_template = str(config('LOCAL_IMPORT_PATH', cast=str))
+LOCAL_IMPORT_PATH = _template.format(schema=SCHEMA)
 _template = str(config('LOCAL_ARCHIVE_PATH', cast=str))
-LOCAL_ARCHIVE_PATH = _template.format(schema=DATABASE['SCHEMA'])
+LOCAL_ARCHIVE_PATH = _template.format(schema=SCHEMA)
 
 # Sage X3 database table settings
 DEFAULT_LEGACY_DATE = date(1753, 1, 1)

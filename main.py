@@ -3,7 +3,7 @@ import logging
 from app.config.logging import setup_logging
 from app.config.settings import SCHEDULING
 from app.scheduler.scheduler import Scheduler
-from app.services.file_handler import sync_local_folder_to_sftp
+from app.services.file_handler import sync_local_folder_to_sftp, sync_sftp_to_local_folder
 
 
 def run_synchronization():
@@ -11,11 +11,13 @@ def run_synchronization():
     main_logger = logging.getLogger(__name__)
     main_logger.info('Execução iniciada.')
 
-    # Verifica se existem ficheiros para serem transferidos para o Magento
-    if sync_local_folder_to_sftp():
-        main_logger.info('Ficheiros transferidos com sucesso.')
-    else:
-        main_logger.warning('Nenhum ficheiro a transferir.')
+    # # Verifica se existem ficheiros para serem transferidos para o Magento
+    if not sync_local_folder_to_sftp():
+        main_logger.info('Problemas com a transferência de ficheiros para o Magento.')
+
+    # Verifica se existem ficheiros para serem transferidos do Magento
+    if not sync_sftp_to_local_folder():
+        main_logger.info('Problemas com a transferência de ficheiros do Magento.')
 
     main_logger.info('Execução concluída.')
 
@@ -28,7 +30,7 @@ def main():
 
     # Verifica se deve rodar em modo agendado ou uma única vez
     if SCHEDULING['SCHEDULE_ENABLED']:
-        main_logger.info('Iniciando em modo agendado...')
+        main_logger.info('Iniciar em modo agendado...')
         scheduler = Scheduler(run_synchronization, SCHEDULING)
         scheduler.start()
     else:

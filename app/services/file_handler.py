@@ -2,13 +2,14 @@ import logging
 import re
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Pattern
+from typing import Optional, Pattern
 
 from app.config import settings
+from app.database.manager import DatabaseManager
 from app.ftp.manager import SftpManager
 
 
-def _get_remote_destination(filename: str, rules: Dict[Pattern, str]) -> Optional[str]:
+def _get_remote_destination(filename: str, rules: dict[Pattern, str]) -> Optional[str]:
     """
     Determina a subpasta remota para um ficheiro com base em um conjunto de regras.
     Retorna a subpasta ou None se nenhuma regra corresponder.
@@ -24,7 +25,7 @@ def _get_remote_destination(filename: str, rules: Dict[Pattern, str]) -> Optiona
     return None
 
 
-def _archive_processed_files(filenames: List[str], source_dir: Path, archive_dir: Path) -> None:
+def _archive_processed_files(filenames: list[str], source_dir: Path, archive_dir: Path) -> None:
     """
     Move uma lista de ficheiros de um diretório de origem para um de arquivamento.
     """
@@ -49,7 +50,7 @@ def _archive_processed_files(filenames: List[str], source_dir: Path, archive_dir
 
 
 def _process_folder(
-    sftp_client, source_dir: Path, archive_dir: Path, routing_rules: Dict[Pattern, str], base_remote_path: str
+    sftp_client, source_dir: Path, archive_dir: Path, routing_rules: dict[Pattern, str], base_remote_path: str
 ) -> None:
     """
     Processa todos os ficheiros em um único diretório de origem, aplica as regras de roteamento,
@@ -93,12 +94,43 @@ def _process_folder(
     _archive_processed_files(files_to_archive, source_dir, archive_dir)
 
 
+def _download_files_from_remote_folder(sftp_client, remote_folder_path: Path, local_download_dir: Path):
+    """
+    Baixa todos os ficheiros de uma pasta remota específica e os remove após o sucesso.
+    """
+    remote_folder_str = str(remote_folder_path).replace('\\', '/')
+
+    files_in_folder = sftp_client.list_files(remote_folder_str)
+
+    if not files_in_folder:
+        logging.info(f"Nenhum ficheiro encontrado em '{remote_folder_str}'.")
+        return
+
+    logging.info(f"Encontrados {len(files_in_folder)} ficheiros em '{remote_folder_str}'.")
+
+    for filename in files_in_folder:
+        remote_filepath = f'{remote_folder_str}/{filename}'
+        local_filepath = local_download_dir / filename
+
+        logging.info(f"Baixar '{remote_filepath}' para '{local_filepath}'...")
+
+        # Tenta baixar o ficheiro
+        download_success = sftp_client.download_file(remote_filepath, str(local_filepath))
+
+        # Se o download for bem-sucedido, remove o ficheiro remoto
+        if download_success:
+            logging.info(f"Download de '{filename}' bem-sucedido. Remover ficheiro remoto.")
+            sftp_client.delete_file(remote_filepath)
+        else:
+            logging.error(f"Falha no download de '{filename}'. O ficheiro não será removido do SFTP.")
+
+
 def sync_local_folder_to_sftp() -> bool:
     """
     Orquestra a sincronização de ficheiros de uma pasta local para o SFTP,
     seguindo regras de roteamento e arquivar os ficheiros processados.
     """
-    logging.info('Iniciar a tarefa de sincronização com roteamento e arquivamento.')
+    logging.info('Envio de ficheiros para o SFTP iniciado.')
 
     local_sync_path = Path(settings.LOCAL_EXPORT_PATH)
     local_archive_path = Path(settings.LOCAL_ARCHIVE_PATH)
@@ -136,6 +168,58 @@ def sync_local_folder_to_sftp() -> bool:
         logging.error(f'Falha crítica na conexão ou operação SFTP: {e}')
         return False
 
-    logging.info('Tarefa de sincronização concluída.')
+    logging.info('Envio de ficheiros para o SFTP concluído.')
+
+    return True
+
+
+def sync_sftp_to_local_folder() -> bool:
+    """
+    Busca ficheiros de pastas específicas no SFTP, baixando-os localmente.
+    """
+    logging.info('Iniciar tarefa de download de ficheiros do SFTP.')
+
+    # 1. Buscar a lista de lojas do banco de dados
+    logging.info('Buscar lista de lojas no banco de dados...')
+
+    base_sql = f'SELECT SALFCY_0 FROM {settings.SCHEMA}.ZLOJAS'
+
+    folder_codes = []
+    try:
+        with DatabaseManager() as db:
+            results = db.fetch_data(query_base=base_sql, order_by_fields=['SALFCY_0'])
+            if results:
+                # Extrai apenas o valor da coluna 'SALFCY_0' de cada dicionário
+                folder_codes = [row['SALFCY_0'] for row in results]
+    except Exception as e:
+        logging.error(f'Falha ao buscar lista de lojas do banco de dados: {e}')
+        return False
+
+    if not folder_codes:
+        logging.warning('Nenhuma loja ativa encontrada no banco de dados. Tarefa encerrada.')
+        return False
+
+    logging.info(f'Lojas a serem verificadas: {folder_codes}')
+
+    # 2. Processar cada loja no SFTP
+    base_remote_path = Path(settings.SFTP_SYNC_BASE_PATH)
+
+    # Diretório local de destino para os downloads
+    local_download_dir = Path(settings.LOCAL_IMPORT_PATH)
+    local_download_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with SftpManager() as sftp:
+            for code in folder_codes:
+                # Define as subpastas a serem verificadas para este código
+                subfolders_to_check = [base_remote_path / code / 'in', base_remote_path / code / 'recolhas' / 'in']
+
+                for remote_folder in subfolders_to_check:
+                    _download_files_from_remote_folder(sftp, remote_folder, local_download_dir)
+    except Exception as e:
+        logging.error(f'Falha crítica durante a tarefa de download: {e}')
+        return False
+
+    logging.info('Tarefa de download de ficheiros do SFTP concluída.')
 
     return True

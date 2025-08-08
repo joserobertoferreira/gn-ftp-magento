@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import paramiko
 from paramiko.ssh_exception import AuthenticationException, BadHostKeyException, SSHException
@@ -134,4 +134,41 @@ class SftpManager:
             return True
         except Exception as e:
             logging.error(f'Falha no download do ficheiro: {e}')
+            return False
+
+    def list_files(self, remote_path: str) -> List[str]:
+        """
+        Lista os nomes dos ficheiros em um diretório remoto.
+        Retorna uma lista vazia se o diretório não existir ou em caso de erro.
+        """
+        if not self.sftp_client:
+            logging.error('Cliente SFTP não conectado.')
+            return []
+
+        try:
+            logging.info(f"Listar ficheiros em '{remote_path}'...")
+            return self.sftp_client.listdir(remote_path)
+        except FileNotFoundError:
+            logging.warning(f'Diretório remoto não encontrado: {remote_path}')
+            return []
+        except Exception as e:
+            logging.error(f"Falha ao listar ficheiros em '{remote_path}': {e}")
+            return []
+
+    def delete_file(self, remote_path: str) -> bool:
+        """
+        Remove um ficheiro no servidor SFTP.
+        Retorna True se bem-sucedido, False caso contrário.
+        """
+        if not self.sftp_client:
+            logging.error('Cliente SFTP não conectado.')
+            return False
+
+        try:
+            logging.info(f'Deletando ficheiro remoto: {remote_path}')
+            self.sftp_client.remove(remote_path)
+            logging.info(f"Ficheiro '{remote_path}' removido com sucesso.")
+            return True
+        except Exception as e:
+            logging.error(f"Falha ao remover ficheiro remoto '{remote_path}': {e}")
             return False

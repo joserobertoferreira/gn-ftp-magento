@@ -34,6 +34,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+Interfaces/
+TGN/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -193,5 +195,6 @@ __localcode
 static/
 media/
 known_hosts
+
 
 # End of https://www.toptal.com/developers/gitignore/api/python

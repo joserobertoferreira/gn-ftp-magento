@@ -12,6 +12,13 @@ def run_synchronization():
     main_logger = logging.getLogger(__name__)
     main_logger.info('Execução iniciada.')
 
+    # Sincroniza os dados de stock
+    execution_time = datetime.now()
+
+    if execution_time.minute == 0:
+        if not sync_stocks():
+            main_logger.info('Problemas com a sincronização de dados de stock.')
+
     # # Verifica se existem ficheiros para serem transferidos para o Magento
     if not sync_local_folder_to_sftp():
         main_logger.info('Problemas com a transferência de ficheiros para o Magento.')
@@ -19,13 +26,6 @@ def run_synchronization():
     # Verifica se existem ficheiros para serem transferidos do Magento
     if not sync_sftp_to_local_folder():
         main_logger.info('Problemas com a transferência de ficheiros do Magento.')
-
-    # Sincroniza os dados de stock
-    execution_time = datetime.now()
-
-    if execution_time.minute == 0:
-        if not sync_stocks():
-            main_logger.info('Problemas com a sincronização de dados de stock.')
 
     main_logger.info('Execução concluída.')
 

@@ -7,6 +7,7 @@ from typing import Optional, Pattern
 from app.config import settings
 from app.database.manager import DatabaseManager
 from app.ftp.manager import SftpManager
+from app.services.stock_sync import StockSync
 
 
 def _get_remote_destination(filename: str, rules: dict[Pattern, str]) -> Optional[str]:
@@ -164,11 +165,11 @@ def sync_local_folder_to_sftp() -> bool:
         with SftpManager() as sftp:
             _process_folder(sftp, local_sync_path, local_archive_path, main_folder_rules, base_remote_path)
             _process_folder(sftp, devolucao_folder_path, local_archive_path, devolucao_folder_rules, base_remote_path)
+
+        logging.info('Envio de ficheiros para o SFTP concluído.')
     except Exception as e:
         logging.error(f'Falha crítica na conexão ou operação SFTP: {e}')
         return False
-
-    logging.info('Envio de ficheiros para o SFTP concluído.')
 
     return True
 
@@ -182,12 +183,12 @@ def sync_sftp_to_local_folder() -> bool:
     # 1. Buscar a lista de lojas do banco de dados
     logging.info('Buscar lista de lojas no banco de dados...')
 
-    base_sql = f'SELECT SALFCY_0 FROM {settings.SCHEMA}.ZLOJAS'
+    base_sql = f'SELECT SALFCY_0 FROM {settings.SCHEMA}.ZLOJAS ORDER BY SALFCY_0'
 
     folder_codes = []
     try:
         with DatabaseManager() as db:
-            results = db.fetch_data(query_base=base_sql, order_by_fields=['SALFCY_0'])
+            results = db.fetch_data(query_base=base_sql)
             if results:
                 # Extrai apenas o valor da coluna 'SALFCY_0' de cada dicionário
                 folder_codes = [row['SALFCY_0'] for row in results]
@@ -216,10 +217,39 @@ def sync_sftp_to_local_folder() -> bool:
 
                 for remote_folder in subfolders_to_check:
                     _download_files_from_remote_folder(sftp, remote_folder, local_download_dir)
+
+        logging.info('Tarefa de download de ficheiros do SFTP concluída.')
     except Exception as e:
         logging.error(f'Falha crítica durante a tarefa de download: {e}')
         return False
 
-    logging.info('Tarefa de download de ficheiros do SFTP concluída.')
+    return True
+
+
+def sync_stocks() -> bool:
+    """
+    Sincroniza os dados de stock entre o X3 e o Magento.
+    """
+    logging.info('Iniciar tarefa de sincronização de stocks.')
+
+    try:
+        with StockSync() as stock_sync:
+            # Busca os dados de stock do X3
+            stock_data = stock_sync.fetch_stock_data()
+
+            if stock_data is not None and not stock_data.empty:
+                # Gera os ficheiros de stock
+                total_stock_file = stock_sync.generate_total_stock_file(stock_data)
+                store_files = stock_sync.generate_store_files(stock_data)
+
+                # Envia os ficheiros gerados para o SFTP
+                if stock_sync.upload_files(store_files, total_stock_file):
+                    logging.info('Tarefa de sincronização de stock finalizada com sucesso.')
+                    return True
+
+        logging.info('Nenhum ficheiro foi enviado para o SFTP.')
+    except Exception as e:
+        logging.error(f'Ocorreu um erro crítico durante a sincronização de stock: {e}', exc_info=True)
+        return False
 
     return True

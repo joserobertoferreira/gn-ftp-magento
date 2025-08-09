@@ -1,9 +1,10 @@
 import logging
+from datetime import datetime
 
 from app.config.logging import setup_logging
 from app.config.settings import SCHEDULING
 from app.scheduler.scheduler import Scheduler
-from app.services.file_handler import sync_local_folder_to_sftp, sync_sftp_to_local_folder
+from app.services.file_handler import sync_local_folder_to_sftp, sync_sftp_to_local_folder, sync_stocks
 
 
 def run_synchronization():
@@ -18,6 +19,13 @@ def run_synchronization():
     # Verifica se existem ficheiros para serem transferidos do Magento
     if not sync_sftp_to_local_folder():
         main_logger.info('Problemas com a transferência de ficheiros do Magento.')
+
+    # Sincroniza os dados de stock
+    execution_time = datetime.now()
+
+    if execution_time.minute == 0:
+        if not sync_stocks():
+            main_logger.info('Problemas com a sincronização de dados de stock.')
 
     main_logger.info('Execução concluída.')
 

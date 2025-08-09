@@ -34,8 +34,6 @@ SFTP_PORT = config('SFTP_PORT', default=22, cast=int)
 SFTP_USER = config('SFTP_USER', default='', cast=str)
 SFTP_PASSWORD = config('SFTP_PASSWORD', default='', cast=str)
 
-SFTP_UPLOAD_PATH = config('SFTP_UPLOAD_PATH', default='/', cast=str)
-SFTP_DOWNLOAD_PATH = config('SFTP_DOWNLOAD_PATH', default='/', cast=str)
 SFTP_SYNC_BASE_PATH = str(config('SFTP_SYNC_BASE_PATH', default='/', cast=str))
 
 _template = str(config('LOCAL_EXPORT_PATH', cast=str))

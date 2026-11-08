@@ -43,9 +43,27 @@ LOCAL_IMPORT_PATH = _template.format(schema=SCHEMA)
 _template = str(config('LOCAL_ARCHIVE_PATH', cast=str))
 LOCAL_ARCHIVE_PATH = _template.format(schema=SCHEMA)
 
+# Network storage where a copy of the generated files is kept
+STORAGE_ARCHIVE_PATH = str(config('STORAGE_ARCHIVE_PATH', cast=str))
+
+# Network folder where a copy of the customer satisfaction email files is kept
+EMAIL_ARCHIVE_PATH = str(config('EMAIL_ARCHIVE_PATH', cast=str))
+
 # Sage X3 database table settings
 DEFAULT_LEGACY_DATE = date(1753, 1, 1)
 DEFAULT_LEGACY_DATETIME = datetime(1753, 1, 1)
+
+
+def _task_schedule(prefix: str, start: str, end: str, interval_minutes: int) -> dict:
+    """Lê do .env a janela e o intervalo de uma tarefa (variáveis <prefix>_START_TIME, etc.)."""
+    return {
+        'start': config(f'{prefix}_START_TIME', default=start, cast=str),
+        'end': config(f'{prefix}_END_TIME', default=end, cast=str),
+        'interval_minutes': config(f'{prefix}_INTERVAL_MINUTES', default=interval_minutes, cast=int),
+    }
+
+
+_customer_emails_time = config('CUSTOMER_EMAILS_SCHEDULE_TIME', default='06:00', cast=str)
 
 # Schedule settings
 SCHEDULING = {
@@ -55,11 +73,13 @@ SCHEDULING = {
     'SCHEDULE_MONTHS': config(
         'SCHEDULE_MONTHS', default='1,2,3,4,5,6,7,8,9,10,11,12', cast=lambda x: [int(m) for m in x.split(',')]
     ),
-    # Timetable for scheduling
-    'SCHEDULE_START_TIME': config('SCHEDULE_START_TIME', default='08:00', cast=str),
-    'SCHEDULE_END_TIME': config('SCHEDULE_END_TIME', default='18:00', cast=str),
-    # Execution interval in minutes
-    'SCHEDULE_INTERVAL_MINUTES': config('SCHEDULE_INTERVAL_MINUTES', default=60, cast=int),
     # Execute immediately if the script is started within the allowed time
     'SCHEDULE_RUN_IMMEDIATELY': config('SCHEDULE_RUN_IMMEDIATELY', default=True, cast=bool),
+    # Timetable of each task
+    'TASKS': {
+        'transfers': _task_schedule('SCHEDULE', '08:00', '18:00', 60),
+        'stock': _task_schedule('STOCK_SCHEDULE', '08:00', '23:00', 60),
+        'barcodes': _task_schedule('BARCODES_SCHEDULE', '08:00', '16:00', 240),
+        'customer_emails': {'start': _customer_emails_time, 'end': _customer_emails_time, 'interval_minutes': 1440},
+    },
 }

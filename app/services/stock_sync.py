@@ -1,5 +1,4 @@
 import logging
-import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -7,54 +6,14 @@ from typing import Optional
 import pandas as pd
 
 from app.config import settings
-from app.database.manager import DatabaseManager
-from app.ftp.manager import SftpManager
+from app.services.export_sync import ExportSync
 
 
-class StockSync:
+class StockSync(ExportSync):
     """
     Orquestra a sincronização de dados de stock, desde a extração
     do banco até a geração e envio de ficheiros via SFTP.
     """
-
-    def __init__(self):
-        """
-        Inicializa os gerenciadores que serão usados. A conexão em si ainda não é aberta aqui.
-        """
-        self.db_manager: Optional[DatabaseManager] = None
-        self.sftp_manager: Optional[SftpManager] = None
-        self.export_dir = Path(settings.LOCAL_EXPORT_PATH)
-        self.archive_dir = Path(settings.LOCAL_ARCHIVE_PATH)
-        self.base_remote_path = settings.SFTP_SYNC_BASE_PATH
-
-    def __enter__(self):
-        """
-        Gerenciador de contexto: Abre as conexões necessárias (DB e SFTP).
-        """
-
-        # Instancia e entra no contexto do DatabaseManager
-        self.db_manager = DatabaseManager()
-        self.db_manager.__enter__()  # Abre a conexão com o banco
-
-        # Instancia e entra no contexto do SftpManager
-        self.sftp_manager = SftpManager()
-        self.sftp_manager.__enter__()  # Abre a conexão SFTP
-
-        # Garante que os diretórios locais existem
-        self.export_dir.mkdir(parents=True, exist_ok=True)
-        self.archive_dir.mkdir(parents=True, exist_ok=True)
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Gerenciador de contexto: Fecha as conexões.
-        """
-        if self.sftp_manager:
-            self.sftp_manager.__exit__(exc_type, exc_val, exc_tb)
-
-        if self.db_manager:
-            self.db_manager.__exit__(exc_type, exc_val, exc_tb)
 
     def fetch_stock_data(self) -> Optional[pd.DataFrame]:
         """
@@ -132,7 +91,8 @@ class StockSync:
 
         # Agrupa por produto e soma as quantidades
         total_stock = (
-            df.groupby('ITMREF_0')
+            df
+            .groupby('ITMREF_0')
             .agg(
                 ZITMDES_0=('ZITMDES_0', 'first'),
                 AVLSTO_0=('AVLSTO_0', 'sum'),
@@ -216,20 +176,9 @@ class StockSync:
         logging.info(f'Iniciar upload de {len(files_to_upload) + 1} ficheiros de stock...')
 
         if total_stock_file:
-            remote_path = f'{self.base_remote_path}/Magento/{total_stock_file.name}'
-            success = self.sftp_manager.upload_file(str(total_stock_file), remote_path)
-            if success:
-                archive_path = self.archive_dir / total_stock_file.name
-                shutil.move(str(total_stock_file), str(archive_path))
-                logging.info(f'Ficheiro {total_stock_file.name} enviado e arquivado com sucesso.')
+            self._upload_and_archive(self.sftp_manager, total_stock_file, 'Magento', Path('STOCK') / 'STOCKTOTAL')
 
         for file_path in files_to_upload:
-            remote_path = f'{self.base_remote_path}/StockporLoja/{file_path.name}'
-            success = self.sftp_manager.upload_file(str(file_path), remote_path)
-
-            if success:
-                archive_path = self.archive_dir / file_path.name
-                shutil.move(str(file_path), str(archive_path))
-                logging.info(f'Ficheiro {file_path.name} enviado e arquivado com sucesso.')
+            self._upload_and_archive(self.sftp_manager, file_path, 'StockporLoja', Path('STOCK') / 'STOCKPORLOJA')
 
         return True

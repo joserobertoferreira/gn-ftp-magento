@@ -1,12 +1,15 @@
 import logging
 import re
 import shutil
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Optional, Pattern
 
 from app.config import settings
 from app.database.manager import DatabaseManager
 from app.ftp.manager import SftpManager
+from app.services.barcode_sync import BarcodeSync
+from app.services.customer_email_sync import CustomerEmailSync
 from app.services.stock_sync import StockSync
 
 
@@ -253,3 +256,55 @@ def sync_stocks() -> bool:
         return False
 
     return True
+
+
+def sync_barcodes() -> bool:
+    """
+    Extrai os códigos de barras do X3 e envia o ficheiro gerado para o SFTP.
+    """
+    logging.info('Iniciar tarefa de sincronização de códigos de barras.')
+
+    try:
+        with BarcodeSync() as barcode_sync:
+            barcode_data = barcode_sync.fetch_barcode_data()
+
+            if barcode_data is None:
+                return False
+
+            barcode_file = barcode_sync.generate_barcode_file(barcode_data)
+
+            if barcode_file is None:
+                logging.info('Nenhum código de barras encontrado. Nenhum ficheiro foi enviado para o SFTP.')
+                return True
+
+            return barcode_sync.upload_file(barcode_file)
+    except Exception as e:
+        logging.error(f'Ocorreu um erro crítico durante a sincronização de códigos de barras: {e}', exc_info=True)
+        return False
+
+
+def sync_customer_emails() -> bool:
+    """
+    Extrai os emails de satisfação de clientes do dia anterior e envia os ficheiros gerados para o SFTP.
+    """
+    logging.info('Iniciar tarefa de emails de satisfação de clientes.')
+
+    reference_date = date.today() - timedelta(days=1)
+
+    try:
+        with CustomerEmailSync() as email_sync:
+            email_data = email_sync.fetch_email_data(reference_date)
+
+            if email_data is None:
+                return False
+
+            files = email_sync.generate_files(email_data, reference_date)
+
+            if not files:
+                logging.info('Sem registos no dia anterior. Nenhum ficheiro foi enviado para o SFTP.')
+                return True
+
+            return email_sync.upload_files(files)
+    except Exception as e:
+        logging.error(f'Ocorreu um erro crítico durante a tarefa de emails de satisfação: {e}', exc_info=True)
+        return False

@@ -31,9 +31,22 @@
     pip install -r requirements.txt
     ```
 
-    !!! warning "requirements.txt pode estar desatualizado"
+    Para incluir também as ferramentas de documentação:
+
+    ```bash
+    pip install -r requirements-docs.txt
+    ```
+
+    O `requirements-docs.txt` é independente: para construir apenas a documentação não é preciso
+    instalar o `requirements.txt`.
+
+    !!! warning "Os ficheiros requirements podem estar desatualizados"
         A fonte de verdade das dependências é o `pyproject.toml` / `uv.lock`.
-        O `requirements.txt` é mantido manualmente.
+        O `requirements.txt` é mantido manualmente. O `requirements-docs.txt` é gerado com:
+
+        ```bash
+        uv export --only-group docs --no-hashes --no-annotate --no-header --no-emit-project -o requirements-docs.txt
+        ```
 
 ## Preparar a configuração
 

@@ -20,3 +20,6 @@ está em `docs/` e é gerada com MkDocs:
 uv run --group docs mkdocs serve    # http://127.0.0.1:8765
 uv run --group docs mkdocs build    # gera a pasta site/
 ```
+
+Com `pip`, a aplicação instala-se com `requirements.txt` e as ferramentas de documentação com
+`requirements-docs.txt`.

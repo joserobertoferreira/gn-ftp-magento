@@ -78,6 +78,6 @@ Formato: `AAAA-MM-DD HH:MM:SS,mmm - NÍVEL - logger - mensagem`.
 | `Erro ao conectar ao banco de dados via SQLAlchemy`                 | Servidor/porta/credenciais SQL; firewall; caracteres especiais na palavra-passe. |
 | `Nenhuma loja ativa encontrada no banco de dados`                   | Tabela `ZLOJAS` vazia no schema configurado.                                   |
 | `Problemas com a transferência de ficheiros para o Magento.`        | Frequentemente apenas significa que **não havia ficheiros** a enviar — ver [Análise técnica](../analise-tecnica.md#valores-de-retorno-ambiguos). |
-| Ficheiros ficam esquecidos em `LOCAL_EXPORT_PATH`                   | O nome não corresponde a nenhuma [regra de roteamento](../funcionamento/envio.md#regras-de-roteamento), ou o upload falhou. Ficheiros de stock, `EANS*`, `MS_*` e `ML_*` não são reenviados automaticamente; confirmar que a pasta remota existe. |
+| Ficheiros ficam esquecidos em `LOCAL_EXPORT_PATH`                   | O nome não corresponde a nenhuma [regra de roteamento](../funcionamento/envio.md#regras-de-roteamento), ou o upload falhou. |
 | `Falha ao copiar '...' para o storage`                              | Partilha indisponível ou sem permissão de escrita. O ficheiro já foi enviado para o SFTP e fica em `LOCAL_ARCHIVE_PATH`, de onde pode ser copiado manualmente. |
 | `A tarefa '...' terminou sem sucesso.`                              | Consultar os erros anteriores em `logs/app_error.log` (falha na query ou no envio). |

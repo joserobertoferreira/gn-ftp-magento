@@ -41,9 +41,9 @@ Todas as variáveis desta secção são obrigatórias.
 
 | Variável             | Descrição                                                                 |
 | -------------------- | ------------------------------------------------------------------------- |
-| `LOCAL_EXPORT_PATH`  | Pasta de saída: ficheiros a enviar para o SFTP (EDI do X3 e ficheiros gerados pelas rotinas de stock, códigos de barras e emails). Pode conter a subpasta `devolucao/`. |
+| `LOCAL_EXPORT_PATH`  | Pasta de saída: ficheiros exportados pelo X3 (EDI, produtos, devoluções) a enviar para o SFTP. Pode conter a subpasta `devolucao/`. |
 | `LOCAL_IMPORT_PATH`  | Pasta de entrada: ficheiros descarregados do SFTP, a importar no X3.      |
-| `LOCAL_ARCHIVE_PATH` | Ficheiros enviados com sucesso são movidos para aqui.                     |
+| `LOCAL_ARCHIVE_PATH` | Ficheiros EDI enviados com sucesso são movidos para aqui. Os ficheiros de stock, códigos de barras e emails são gerados diretamente aqui (ficam mesmo que o envio falhe). |
 | `STORAGE_ARCHIVE_PATH` | Partilha de rede com uma cópia dos ficheiros de stock (`STOCK\STOCKTOTAL`, `STOCK\STOCKPORLOJA`) e de códigos de barras (`STOCK\EANS`). |
 | `EMAIL_ARCHIVE_PATH` | Partilha de rede com uma cópia dos ficheiros de emails de satisfação (`Site` e `Lojas`). |
 

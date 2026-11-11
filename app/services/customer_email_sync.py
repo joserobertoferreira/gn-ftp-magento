@@ -65,7 +65,7 @@ class CustomerEmailSync(ExportSync):
                 logging.info(f'Sem registos para o ficheiro {prefix}. Nenhum ficheiro será gerado.')
                 continue
 
-            filepath = self.export_dir / f'{prefix}_{timestamp}.txt'
+            filepath = self.archive_dir / f'{prefix}_{timestamp}.txt'
             group.to_csv(
                 filepath,
                 columns=FILE_COLUMNS,

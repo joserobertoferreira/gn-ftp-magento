@@ -19,7 +19,7 @@ class ExportSync:
         """
         self.db_manager: Optional[DatabaseManager] = None
         self.sftp_manager: Optional[SftpManager] = None
-        self.export_dir = Path(settings.LOCAL_EXPORT_PATH)
+        # Os ficheiros são gerados diretamente na pasta de arquivo, pois só se destinam ao SFTP
         self.archive_dir = Path(settings.LOCAL_ARCHIVE_PATH)
         self.storage_dir = Path(settings.STORAGE_ARCHIVE_PATH)
         self.base_remote_path = settings.SFTP_SYNC_BASE_PATH
@@ -37,8 +37,7 @@ class ExportSync:
         self.sftp_manager = SftpManager()
         self.sftp_manager.__enter__()  # Abre a conexão SFTP
 
-        # Garante que os diretórios locais existem
-        self.export_dir.mkdir(parents=True, exist_ok=True)
+        # Garante que o diretório local existe
         self.archive_dir.mkdir(parents=True, exist_ok=True)
 
         return self
@@ -57,16 +56,17 @@ class ExportSync:
         self, sftp_manager: SftpManager, file_path: Path, remote_folder: str, storage_subfolder: Path
     ) -> bool:
         """
-        Envia um ficheiro para o SFTP e, se o envio tiver sucesso, copia-o para o storage e arquiva-o.
+        Envia um ficheiro (já gerado em LOCAL_ARCHIVE_PATH) para o SFTP e, se o envio tiver sucesso,
+        copia-o para o storage.
         """
         remote_path = f'{self.base_remote_path}/{remote_folder}/{file_path.name}'
 
         if not sftp_manager.upload_file(str(file_path), remote_path):
+            logging.error(f"Ficheiro '{file_path.name}' não foi enviado para o SFTP. Fica em '{self.archive_dir}'.")
             return False
 
         self._copy_to_storage(file_path, storage_subfolder)
 
-        shutil.move(str(file_path), str(self.archive_dir / file_path.name))
         logging.info(f'Ficheiro {file_path.name} enviado e arquivado com sucesso.')
 
         return True
@@ -74,7 +74,7 @@ class ExportSync:
     def _copy_to_storage(self, file_path: Path, storage_subfolder: Path) -> None:
         """
         Copia um ficheiro para o storage. Uma falha é registada mas não interrompe o arquivo,
-        pois o ficheiro já foi enviado e fica disponível em LOCAL_ARCHIVE_PATH.
+        pois o ficheiro já foi enviado e está disponível em LOCAL_ARCHIVE_PATH.
         """
         destination_dir = self.storage_dir / storage_subfolder
 

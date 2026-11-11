@@ -25,7 +25,7 @@ Uma linha por código de barras preenchido dos artigos com `STOMGTCOD_0 > 1`, or
 
 ## Ficheiro gerado — `EANSAAMMDDhhmmss.txt`
 
-CSV **sem cabeçalho**, separador `;`, codificação UTF-8, gravado em `LOCAL_EXPORT_PATH`.
+CSV **sem cabeçalho**, separador `;`, codificação UTF-8, gravado diretamente em `LOCAL_ARCHIVE_PATH`.
 
 | # | Coluna      | Descrição                        |
 | - | ----------- | -------------------------------- |
@@ -39,7 +39,7 @@ CSV **sem cabeçalho**, separador `;`, codificação UTF-8, gravado em `LOCAL_EX
 ## Envio e arquivo
 
 Tal como nos [stocks](stocks.md#4-envio-e-arquivo), o ficheiro enviado com sucesso é copiado para
-o storage e depois movido para `LOCAL_ARCHIVE_PATH`.
+o storage; o ficheiro local fica em `LOCAL_ARCHIVE_PATH`.
 
 | Destino | Pasta                                  |
 | ------- | -------------------------------------- |

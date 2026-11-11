@@ -105,7 +105,7 @@ class StockSync(ExportSync):
 
         # Define o nome e caminho do ficheiro
         filename = f'STOCKTOTAL{datetime.now().strftime("%y%m%d%H%M%S")}.txt'
-        filepath = self.export_dir / filename
+        filepath = self.archive_dir / filename
 
         total_stock.to_csv(filepath, sep=';', index=False, encoding='utf-8', header=False, decimal=',')
 
@@ -140,7 +140,7 @@ class StockSync(ExportSync):
 
         for store_code, store_df in grouped_by_store:
             filename = f'STOCKLOJA_{store_code}{datetime.now().strftime("%y%m%d%H%M%S")}.txt'
-            filepath = self.export_dir / filename
+            filepath = self.archive_dir / filename
 
             # Filtrar DataFrame para incluir apenas itens com stock disponível
             filtered_df = store_df[store_df['AVLSTO_0'] > 0].copy()

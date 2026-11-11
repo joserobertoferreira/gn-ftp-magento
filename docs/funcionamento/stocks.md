@@ -56,7 +56,7 @@ ORDER BY ITV.ITMREF_0, ITV.STOFCY_0
 ## 3. Ficheiros gerados
 
 Todos os ficheiros são CSV **sem cabeçalho**, separador `;`, decimal `,`, codificação UTF-8,
-gravados em `LOCAL_EXPORT_PATH`. O sufixo `AAMMDDhhmmss` é a data/hora de geração.
+gravados diretamente em `LOCAL_ARCHIVE_PATH`. O sufixo `AAMMDDhhmmss` é a data/hora de geração.
 
 ### Stock total — `STOCKTOTALAAMMDDhhmmss.txt`
 
@@ -96,15 +96,15 @@ ART000123;Camisola algodão azul M;14;19,99;17,99;12,5;E05
 
 ## 4. Envio e arquivo
 
-Cada ficheiro enviado com sucesso é copiado para o storage e depois movido para
-`LOCAL_ARCHIVE_PATH`:
+Cada ficheiro enviado com sucesso é copiado para o storage. O ficheiro local já está em
+`LOCAL_ARCHIVE_PATH`, por isso não há nenhuma movimentação:
 
 | Ficheiro       | Pasta no storage (`STORAGE_ARCHIVE_PATH`) |
 | -------------- | ----------------------------------------- |
 | Stock total    | `STOCK\STOCKTOTAL`                        |
 | Stock por loja | `STOCK\STOCKPORLOJA`                      |
 
-Uma falha na cópia para o storage é registada em log, mas o ficheiro é arquivado na mesma e não
+Uma falha na cópia para o storage é registada em log, mas o ficheiro fica na mesma em `LOCAL_ARCHIVE_PATH` e não
 há nova tentativa de cópia. Ficheiros cujo envio
-falhou **permanecem** em `LOCAL_EXPORT_PATH` e não são reenviados automaticamente (os nomes
-`STOCK*` não correspondem às [regras de roteamento](envio.md#regras-de-roteamento) do fluxo de envio).
+falhou também **permanecem** em `LOCAL_ARCHIVE_PATH` e não são reenviados automaticamente; a falha
+fica registada em log com o nome do ficheiro.

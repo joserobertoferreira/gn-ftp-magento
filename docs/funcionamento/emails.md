@@ -37,7 +37,8 @@ houver registos para um dos valores, esse ficheiro não é gerado.
 ## Envio e arquivo
 
 Cada ficheiro é enviado para `{SFTP_SYNC_BASE_PATH}/Emails/`. Se o envio tiver sucesso, é copiado
-para a subpasta respetiva de `EMAIL_ARCHIVE_PATH` e depois movido para `LOCAL_ARCHIVE_PATH`.
+para a subpasta respetiva de `EMAIL_ARCHIVE_PATH`. Os ficheiros são gerados diretamente em
+`LOCAL_ARCHIVE_PATH` e lá ficam, mesmo que o envio falhe.
 A pasta `Emails` tem de existir no SFTP, porque a aplicação não cria pastas remotas.
 
 !!! warning "Execuções manuais"

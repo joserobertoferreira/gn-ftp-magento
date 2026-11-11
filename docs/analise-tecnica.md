@@ -73,8 +73,8 @@ A BD é aberta primeiro; se a ligação SFTP lançar exceção, `__enter__` não
 :orange_circle: **Média**
 
 Se o upload de um `STOCKTOTAL*`/`STOCKLOJA_*`, `EANS*`, `MS_*` ou `ML_*` falhar, o ficheiro fica em
-`LOCAL_EXPORT_PATH` para sempre — não corresponde às regras de roteamento do fluxo de envio, e a
-próxima execução gera ficheiros novos. A pasta vai acumulando ficheiros órfãos. No caso dos
+`LOCAL_ARCHIVE_PATH` (onde é gerado) sem ter sido enviado, e a próxima execução gera ficheiros
+novos. Só o log distingue um ficheiro enviado de um não enviado. No caso dos
 emails, a execução seguinte processa outro dia, por isso os dados do dia falhado têm de ser
 enviados manualmente.
 

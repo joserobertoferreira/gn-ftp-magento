@@ -60,8 +60,8 @@ class BarcodeSync(ExportSync):
             logging.warning('DataFrame vazio. Nenhum ficheiro será criado.')
             return None
 
-        filename = f'EANS{datetime.now().strftime("%y%m%d%H%M%S")}.txt'
-        filepath = self.export_dir / filename
+        filename = f'EANS{datetime.now().strftime("%y%m%d%H%M%S")}000.txt'
+        filepath = self.archive_dir / filename
 
         columns = ['ITMREF_0', 'ZITMDES_0', 'TSICOD_0', 'TSICOD_1', 'EANCOD_0', 'PCUSTUCOE_0']
         df.to_csv(filepath, columns=columns, sep=';', index=False, encoding='utf-8', header=False)
